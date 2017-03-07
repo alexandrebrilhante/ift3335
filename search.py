@@ -1,4 +1,5 @@
-# Tiré du livre de référence.
+# Auteurs: Alexandre Brilhante, Yan Lajeunesse
+# Tiré du livre de référence et modifié quelque peu.
 
 """Search (Chapters 3-4)
 
@@ -30,6 +31,7 @@ class Problem(object):
     __init__, goal_test, and path_cost. Then you will create instances
     of your subclass and solve them with the various search functions."""
 
+    # Ok.
     def __init__(self, initial, goal=None):
         """The constructor specifies the initial state, and possibly a goal
         state, if there is a unique goal.  Your subclass's constructor can add
@@ -50,6 +52,7 @@ class Problem(object):
         self.actions(state)."""
         raise NotImplementedError
 
+    # Ok.
     def goal_test(self, state):
         """Return True if the state is a goal. The default method compares the
         state to self.goal or checks for state in self.goal if it is a
@@ -60,6 +63,7 @@ class Problem(object):
         else:
             return state == self.goal
 
+    # Ok.
     def path_cost(self, c, state1, action, state2):
         """Return the cost of a solution path that arrives at state2 from
         state1 via action, assuming cost c to get up to state1. If the problem
@@ -68,7 +72,6 @@ class Problem(object):
         and action. The default method costs 1 for every step in the path."""
         return c + 1
 
-    
     def value(self, state):
         """For optimization problems, each state has a value.  Hill-climbing
         and related algorithms try to maximize this value."""
@@ -143,19 +146,6 @@ class Node:
 # Uninformed Search algorithms
 
 
-def tree_search(problem, frontier):
-    """Search through the successors of a problem to find a goal.
-    The argument frontier should be an empty queue.
-    Don't worry about repeated paths to a state. [Figure 3.7]"""
-    frontier.append(Node(problem.initial))
-    while frontier:
-        node = frontier.pop()
-        if problem.goal_test(node.state):
-            return node
-        frontier.extend(node.expand(problem))
-    return None
-
-
 def graph_search(problem, frontier):
     """Search through the successors of a problem to find a goal.
     The argument frontier should be an empty queue.
@@ -171,11 +161,6 @@ def graph_search(problem, frontier):
                         if child.state not in explored and
                         child not in frontier)
     return None
-
-
-def depth_first_tree_search(problem):
-    "Search the deepest nodes in the search tree first."
-    return tree_search(problem, Stack())
 
 
 def depth_first_graph_search(problem):
@@ -218,38 +203,6 @@ def best_first_graph_search(problem, f):
 # Other search algorithms
 
 
-def recursive_best_first_search(problem, h=None):
-    "[Figure 3.26]"
-    h = memoize(h or problem.h, 'h')
-
-    def RBFS(problem, node, flimit):
-        if problem.goal_test(node.state):
-            return node, 0   # (The second value is immaterial)
-        successors = node.expand(problem)
-        if len(successors) == 0:
-            return None, infinity
-        for s in successors:
-            s.f = max(s.path_cost + h(s), node.f)
-        while True:
-            # Order by lowest f value
-            successors.sort(key=lambda x: x.f)
-            best = successors[0]
-            if best.f > flimit:
-                return None, best.f
-            if len(successors) > 1:
-                alternative = successors[1].f
-            else:
-                alternative = infinity
-            result, best.f = RBFS(problem, best, min(flimit, alternative))
-            if result is not None:
-                return result, best.f
-
-    node = Node(problem.initial)
-    node.f = h(node)
-    result, bestf = RBFS(problem, node, infinity)
-    return result
-
-
 def hill_climbing(problem):
     """From the initial node, keep choosing the neighbor with highest value,
     stopping when no neighbor is better. [Figure 4.2]"""
@@ -258,7 +211,7 @@ def hill_climbing(problem):
         neighbors = current.expand(problem)
         if not neighbors:
             break
-        # On veut le min, et non le max.    
+        # On veut le min ici, et non le max.    
         neighbor = argmin_random_tie(neighbors,
                                      key=lambda node: problem.value(node.state))
         if problem.value(neighbor.state) <= problem.value(current.state):
