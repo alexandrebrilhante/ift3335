@@ -21,6 +21,7 @@ import bisect
 
 infinity = float('inf')
 
+
 # ______________________________________________________________________________
 
 
@@ -76,6 +77,8 @@ class Problem(object):
         """For optimization problems, each state has a value.  Hill-climbing
         and related algorithms try to maximize this value."""
         raise NotImplementedError
+
+
 # ______________________________________________________________________________
 
 
@@ -146,7 +149,7 @@ class Node:
 # Uninformed Search algorithms
 
 
-def graph_search(problem, frontier):
+def graph_search(problem, frontier, bound):
     """Search through the successors of a problem to find a goal.
     The argument frontier should be an empty queue.
     If two paths reach a state, only use the first one. [Figure 3.7]"""
@@ -155,17 +158,19 @@ def graph_search(problem, frontier):
     while frontier:
         node = frontier.pop()
         if problem.goal_test(node.state):
-            return node
+            return node, len(explored)
         explored.add(node.state)
+        if len(explored) > bound:
+            return None
         frontier.extend(child for child in node.expand(problem)
                         if child.state not in explored and
                         child not in frontier)
-    return None
+    return None, len(explored)
 
 
-def depth_first_graph_search(problem):
+def depth_first_graph_search(problem, bound = 100):
     "Search the deepest nodes in the search tree first."
-    return graph_search(problem, Stack())
+    return graph_search(problem, Stack(), bound)
 
 
 def best_first_graph_search(problem, f):
@@ -186,7 +191,7 @@ def best_first_graph_search(problem, f):
     while frontier:
         node = frontier.pop()
         if problem.goal_test(node.state):
-            return node
+            return node, len(explored)
         explored.add(node.state)
         for child in node.expand(problem):
             if child.state not in explored and child not in frontier:
@@ -196,7 +201,7 @@ def best_first_graph_search(problem, f):
                 if f(child) < f(incumbent):
                     del frontier[incumbent]
                     frontier.append(child)
-    return None
+    return None, len(explored)
 
 
 # ______________________________________________________________________________
@@ -210,10 +215,8 @@ def hill_climbing(problem):
     while True:
         neighbors = current.expand(problem)
         if not neighbors:
-            break
-        # On veut le min ici, et non le max.    
-        neighbor = argmin_random_tie(neighbors,
-                                     key=lambda node: problem.value(node.state))
+            break  
+        neighbor = argmax_random_tie(neighbors, key=lambda node: problem.value(node.state))
         if problem.value(neighbor.state) <= problem.value(current.state):
             break
         current = neighbor
