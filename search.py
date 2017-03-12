@@ -149,7 +149,7 @@ class Node:
 # Uninformed Search algorithms
 
 
-def graph_search(problem, frontier, bound):
+def graph_search(problem, frontier):
     """Search through the successors of a problem to find a goal.
     The argument frontier should be an empty queue.
     If two paths reach a state, only use the first one. [Figure 3.7]"""
@@ -160,17 +160,15 @@ def graph_search(problem, frontier, bound):
         if problem.goal_test(node.state):
             return node, len(explored)
         explored.add(node.state)
-        if len(explored) > bound:
-            return None
         frontier.extend(child for child in node.expand(problem)
                         if child.state not in explored and
                         child not in frontier)
     return None, len(explored)
 
 
-def depth_first_graph_search(problem, bound = 100):
+def depth_first_graph_search(problem):
     "Search the deepest nodes in the search tree first."
-    return graph_search(problem, Stack(), bound)
+    return graph_search(problem, Stack())
 
 
 def best_first_graph_search(problem, f):
