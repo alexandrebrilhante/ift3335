@@ -9,3 +9,5 @@
 - Successeur: une grille temporaire dont une des cases peut être modifiée pour prendre une valeur entre 1 et 9 et qui n'entre pas en conflit avec un autre élément sur la même ligne, la même colonne, ou dans la même sous-grille.
 
 - Coût d'étape: 1 par étape.
+
+testetsetsetsetset pour tester git
