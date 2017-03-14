@@ -1,101 +1,130 @@
-# Auteurs: Alexandre Brilhante, Yan Lajeunesse
+import random
+import sys
+import numpy as np
 
 from search import *
-from utils import *
-
-problem = [[None for x in range(9)] for y in range(9)]
 
 class Sudoku(Problem):
-    def __init__(self, initial, goal=None):
-        self.initial = initial
-        self.goal = set_goal()
-
-    def set_goal(self):
-        if value(self, state) == 0:
-            if grid_full(state):
-                self.goal = state
-
     def actions(self, state):
-        temp = []
-        for i in range(0, len(state)):
-            for j in range(0, len(state)):
-                if state[i][j] == 0:
-                    for k in range(1, 10):
-                        temp.append((i, j, k))
-        return temp
+        state = grid(state)
+        for i, j in zip(*np.where(state == 0)):
+            line = state[i]
+            column = state[:,j]
+            square = state[i//3*3:i//3*3+3,j//3*3:j//3*3+3]
+            for elem in range(1, 10):
+                if elem not in line and elem not in column and elem not in square:
+                    yield i, j, elem
 
-    # Dépend de actions.
     def result(self, state, action):
         i, j, elem = action
-        state[i][j] = elem
-        return state
+        temp = list(state)
+        temp[i*9+j] = elem
+        return tuple(temp)
 
-    # Retourne le total de conflits, on procède avec le min. Faut ajuster argmin...
+    def goal_test(self, state):
+        return 0 not in state and not conflict(state)
+
     def value(self, state):
-        raise NotImplementedError
+        state = grid(state)
+        temp = []
+        for i, j in zip(*np.where(state == 0)):
+            temp += [possibilities(state, i, j)]
+        return len(temp)
 
-    def grid_full(self, state):
-        for i in range(9):
-            for j in range(9):
-                if state[i][j] == 0:
+class SudokuHillClimbing(Problem):
+    def __init__(self, initial, goal=None):
+        state = grid(initial)
+        self.initial = state
+        for i, j in zip(*np.where(state == 0)):
+            poss = possibilities(state, i, j)
+            state[i][j] = random.choice(poss)
+        self.filled = tuple(state.flatten())
+
+    def actions(self, state):
+        state = grid(self.initial)
+        # Trouve un square
+        for i, j in zip(*np.where(state == 0)):
+            square = state[i//3*3:i//3*3+3,j//3*3:j//3*3+3]
+            # On trouve 2 case qui valent 0
+            for x, y in zip(*np.where(square == 0)):
+                if (i, j) != (x, y):
+                    yield i, j, x, y
+
+    def result(self, state, action):
+        i, j, x, y = action
+        temp = list(state)
+        temp[i*9+j], temp[x*9+y] = temp[x*9+y], temp[i*9+j]
+        return tuple(temp)
+
+    def goal_test(self, state):
+        state = grid(state)
+        for elem in range(1, 10):
+            for x in state:
+                if state[x].count(elem) > 1:
+                    return False
+                elif state[:,x].count(elem) > 1:
                     return False
         return True
 
-def initialize_grid():
-    temp = []
-    with open("1sudoku.txt") as file:
-        for line in file:
-            l = line.strip()
-            for i in range(0, len(l), 9):
-                temp.append(l[i:i+9])
-    for i in range(0, len(temp)):
-        for j in range(0, len(temp[i])):
-            problem[i][j] = int(temp[i][j:j+1])
-    print(problem)
-    return problem
+############### Corrigee. Retourne simplement le nombre d econflits
+############### Pour hillclimbing c correct car square n'aura aucun conflit
+    def value(self, state):
+        return count_conflict(state)
 
-# Retourne le nombre de conflits.
-def line_conflict(line, elem):
-    conflict = 0
-    for j in range(len(problem)):
-        if problem[line][j] == elem:
-            conflict += 1
-    return conflict
+def grid(state):
+    return np.array(state).reshape((9, 9))
 
-# Retourne le nombre de conflits.
-def column_conflict(column, elem):
-    conflict = 0
-    for i in range(len(problem)):
-        if problem[i][column] == elem:
-            conflict += 1
-    return conflict
+def line(state, line, elem):
+    state = grid(state)
+    return state[line].count(elem) > 1
 
-# Retourne le nombre de conflits.
-def subsquare_conflict(line, column, elem):
-    conflict = 0
-    line -= line%3
-    column -= column%3
-    for i in range(3):
-        for j in range(3):
-            if problem[i+line][j+column] == elem:
-                conflict += 1
-    return conflict
+def column(state, column, elem):
+    state = grid(state)
+    return state[:,column].count(elem) > 1
 
-def insert_conflict(line, column, elem):
-    return False if not line_conflict(line, elem) and not column_conflict(column, elem) and not subsquare_conflict(line, column, elem) else True
+def square(state, line, column, elem):
+    state = grid(state)
+    return state[line//3*3:line//3*3+3,col//3*3:col//3*3+3].count(elem) > 1
 
-def possibilities(line, column):
+########## Compte le nombre de conflits total. Si aucun conflits dans square
+########## alors on compte les conflits des lignes et colonnes
+def count_conflict(state):
+    countConflicts = 0
+    for x in range(9):
+        for y in range(1, 10):
+            if (line(state, x, y)):
+                countConflicts += 1
+            elif (column(state, x, y)):
+                countConflicts += 1
+        for i in range(9):
+            for j in range(9):
+                for k in range(1, 10):
+                    if (square(state, i, j, k)):
+                        countConflicts +=1
+    return countConflicts
+
+def possibilities(state, i, j):
     n = [x for x in range(1, 10)]
-    for i in range(len(problem)):
-        if problem[line][i] in n:
-            n.remove(problem[line][i])
-    for i in range(len(problem)):
-        if problem[i][column] in n:
-            n.remove(problem[i][column])
-    line -= line%3
-    column -= column%3
-    for i in range(3):
-        for j in range(3):
-            if problem[i+line][j+column] in n:
-                n.remove(problem[i+line][j+column])
-    return n
+    temp = []
+    state = grid(state)
+    #line = state[i]
+    #column = state[:,j]
+    square = state[i//3*3:i//3*3+3,j//3*3:j//3*3+3]
+    for elem in n:
+        if elem not in square: #elem not in line and elem not in column and 
+            temp.append(elem)
+    return temp
+
+def main():
+    with open("1sudoku.txt", 'r') as f:
+        for line in f:
+            s = Sudoku(tuple(map(int, line[:-1])))
+            # print(possibilities(s.initial, 0, 0))
+            s2 = SudokuHillClimbing(tuple(map(int, line[:-1])))
+            print(grid(hill_climbing(s2)))
+
+def h(state):
+    i, j, k = state.action
+    return possibilities(state, i, j)
+
+main()

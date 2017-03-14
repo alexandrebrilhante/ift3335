@@ -9,6 +9,7 @@ import os.path
 import random
 import math
 
+
 # ______________________________________________________________________________
 # Functions on Sequences and Iterables
 
@@ -59,6 +60,12 @@ def is_in(elt, seq):
     """Similar to (elt in seq), but compares with 'is', not '=='."""
     return any(x is elt for x in seq)
 
+def mode(data): 
+    """Return the most common data item. If there are ties, return any one of them."""
+    [(item, count)] = collections.Counter(data).most_common(1)
+    return item
+
+
 # ______________________________________________________________________________
 # argmin and argmax
 
@@ -83,7 +90,6 @@ def shuffled(iterable):
     items = list(iterable)
     random.shuffle(items)
     return items
-
 
 
 # ______________________________________________________________________________
@@ -259,6 +265,7 @@ except ImportError:
     def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
         """Return true if numbers a and b are close to each other."""
         return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
 
 # ______________________________________________________________________________
 # Misc Functions
@@ -605,6 +612,7 @@ class PriorityQueue(Queue):
         for i, (value, item) in enumerate(self.A):
             if item == key:
                 self.A.pop(i)
+
 
 # ______________________________________________________________________________
 # Useful Shorthands
