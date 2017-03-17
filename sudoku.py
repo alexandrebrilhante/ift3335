@@ -24,7 +24,7 @@ class Sudoku(Problem):
         return tuple(temp)
 
     def goal_test(self, state):
-        return 0 not in state and not count_conflict(state)
+        return 0 not in state and not count_conflicts(state)
 
     def value(self, state):
         state = grid(state)
@@ -73,7 +73,7 @@ class SudokuHillClimbing(Problem):
         return True
 
     def value(self, state):
-        return count_conflict(state)
+        return count_conflicts(state)
 
 def grid(state):
     return np.array(state).reshape((9, 9))
@@ -90,20 +90,20 @@ def square(state, line, column, elem):
     state = grid(state)
     return list(tuple(state[line//3*3:line//3*3+3, column//3*3:column//3*3+3].flatten())).count(elem) > 1
 
-def count_conflict(state):
-    countConflicts = 0
+def count_conflicts(state):
+    counter = 0
     for x in range(9):
         for y in range(1, 10):
             if (line(state, x, y)):
-                countConflicts += 1
+                counter += 1
             elif (column(state, x, y)):
-                countConflicts += 1
+                counter += 1
         for i in range(9):
             for j in range(9):
                 for k in range(1, 10):
                     if (square(state, i, j, k)):
-                        countConflicts += 1
-    return countConflicts
+                        counter += 1
+    return counter
 
 def possibilities(state, i, j):
     n = [x for x in range(1, 10)]
@@ -131,19 +131,3 @@ def most_constrained(node):
         i, j, elem = node.action
         return possibilities_grid(node.parent.state, i, j)
     return 0
-
-def main():
-    with open("1sudoku.txt", 'r') as f:
-        for line in f:
-            s = Sudoku(tuple(map(int, line[:-1])))
-            #s2 = SudokuHillClimbing(tuple(map(int, line[:-1])))
-            #print(depth_first_graph_search(s, 100000))
-            #s3 = grid(simulated_annealing(s2))
-            s34 = tuple(map(int, '530070000600195000098000060800060003400803001700020006060000280000419005000080079'))
-            s34 = grid(s34)
-
-
-
-            print(best_first_graph_search(s, most_constrained))
-
-main()

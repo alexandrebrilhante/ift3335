@@ -139,23 +139,6 @@ class Node:
 # Uninformed Search algorithms
 
 
-def tree_search(problem, frontier, bound):
-    """Search through the successors of a problem to find a goal.
-    The argument frontier should be an empty queue.
-    Don't worry about repeated paths to a state. [Figure 3.7]"""
-    frontier.append(Node(problem.initial))
-    explored = set()
-    while frontier:
-        node = frontier.pop()
-        if problem.goal_test(node.state):
-            return node
-        explored.add(node.state)
-        if len(explored) > bound:
-            return "allo"
-        frontier.extend(node.expand(problem))
-    return None
-
-
 def graph_search(problem, frontier, bound):
     """Search through the successors of a problem to find a goal.
     The argument frontier should be an empty queue.
@@ -165,48 +148,19 @@ def graph_search(problem, frontier, bound):
     while frontier:
         node = frontier.pop()
         if problem.goal_test(node.state):
-            return node
+            return node, len(explored)
         explored.add(node.state)
         if len(explored) > bound:
-            return None, len(explored)
+            return node, len(explored)
         frontier.extend(child for child in node.expand(problem)
                         if child.state not in explored and
                         child not in frontier)
     return None, len(explored)
 
 
-def breadth_first_tree_search(problem):
-    "Search the shallowest nodes in the search tree first."
-    return tree_search(problem, FIFOQueue())
-
-
-def depth_first_tree_search(problem, bound):
-    "Search the deepest nodes in the search tree first."
-    return tree_search(problem, Stack(), bound)
-
-
 def depth_first_graph_search(problem, bound):
     "Search the deepest nodes in the search tree first."
     return graph_search(problem, Stack(), bound)
-
-
-def breadth_first_search(problem):
-    "[Figure 3.11]"
-    node = Node(problem.initial)
-    if problem.goal_test(node.state):
-        return node
-    frontier = FIFOQueue()
-    frontier.append(node)
-    explored = set()
-    while frontier:
-        node = frontier.pop()
-        explored.add(node.state)
-        for child in node.expand(problem):
-            if child.state not in explored and child not in frontier:
-                if problem.goal_test(child.state):
-                    return child
-                frontier.append(child)
-    return None
 
 
 def best_first_graph_search(problem, f):
@@ -227,7 +181,7 @@ def best_first_graph_search(problem, f):
     while frontier:
         node = frontier.pop()
         if problem.goal_test(node.state):
-            return node
+            return node, len(explored)
         explored.add(node.state)
         for child in node.expand(problem):
             if child.state not in explored and child not in frontier:
@@ -237,7 +191,7 @@ def best_first_graph_search(problem, f):
                 if f(child) < f(incumbent):
                     del frontier[incumbent]
                     frontier.append(child)
-    return None
+    return None, len(explored)
 
 
 # ______________________________________________________________________________
@@ -256,6 +210,7 @@ def hill_climbing(problem):
     """From the initial node, keep choosing the neighbor with highest value,
     stopping when no neighbor is better. [Figure 4.2]"""
     current = Node(problem.initial)
+    explored = 0
     while True:
         neighbors = current.expand(problem)
         if not neighbors:
@@ -265,10 +220,11 @@ def hill_climbing(problem):
         if problem.value(neighbor.state) >= problem.value(current.state):
             break
         current = neighbor
-    return current.state
+        explored += 1
+    return current.state, explored
 
 
-def exp_schedule(k=20, lam=0.01, limit=1000):
+def exp_schedule(k=20, lam=0.01, limit=5000):
     "One possible schedule function for simulated annealing"
     return lambda t: (k * math.exp(-lam * t) if t < limit else 0)
 
@@ -276,14 +232,16 @@ def exp_schedule(k=20, lam=0.01, limit=1000):
 def simulated_annealing(problem, schedule=exp_schedule()):
     "[Figure 4.5]"
     current = Node(problem.initial)
+    explored = 0
     for t in range(sys.maxsize):
         T = schedule(t)
         if T == 0:
-            return current.state
+            return current.state, explored
         neighbors = current.expand(problem)
         if not neighbors:
-            return current.state
+            return current.state, explored
         next = random.choice(neighbors)
+        explored += 1
         delta_e = problem.value(current.state) - problem.value(next.state)
         if delta_e > 0 or probability(math.exp(delta_e / T)):
             current = next
