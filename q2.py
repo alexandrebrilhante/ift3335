@@ -13,6 +13,6 @@ def main():
         for line in f:
             s = Sudoku(tuple(map(int, line[:-1])))
             start = time.time()
-            print(depth_first_graph_search(s, bound=5000), round(time.time()-start, 2))
+            print(depth_first_graph_search(s, bound=1000000), round(time.time()-start, 2))
 
 main()

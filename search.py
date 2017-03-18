@@ -139,6 +139,7 @@ class Node:
 # Uninformed Search algorithms
 
 
+""" Retourne egalement le nombre de noeuds explores. """
 def graph_search(problem, frontier, bound):
     """Search through the successors of a problem to find a goal.
     The argument frontier should be an empty queue.
@@ -163,6 +164,7 @@ def depth_first_graph_search(problem, bound):
     return graph_search(problem, Stack(), bound)
 
 
+""" Retourne egalement le nombre de noeuds explores. """
 def best_first_graph_search(problem, f):
     """Search the nodes with the lowest f scores first.
     You specify the function f(node) that you want to minimize; for example,
@@ -206,6 +208,7 @@ greedy_best_first_graph_search = best_first_graph_search
 # Other search algorithms
 
 
+""" Retourne egalement le nombre de noeuds explores. """
 def hill_climbing(problem):
     """From the initial node, keep choosing the neighbor with highest value,
     stopping when no neighbor is better. [Figure 4.2]"""
@@ -224,11 +227,12 @@ def hill_climbing(problem):
     return current.state, explored
 
 
-def exp_schedule(k=20, lam=0.01, limit=5000):
+def exp_schedule(k=20, lam=0.01, limit=500):
     "One possible schedule function for simulated annealing"
     return lambda t: (k * math.exp(-lam * t) if t < limit else 0)
 
 
+""" Retourne egalement le nombre de noeuds explores. """
 def simulated_annealing(problem, schedule=exp_schedule()):
     "[Figure 4.5]"
     current = Node(problem.initial)

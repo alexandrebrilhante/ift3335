@@ -6,6 +6,7 @@ import numpy as np
 
 from search import *
 
+""" Implementation du probleme pour recherche en profondeur et best first."""
 class Sudoku(Problem):
     def actions(self, state):
         state = grid(state)
@@ -33,6 +34,7 @@ class Sudoku(Problem):
             temp += [possibilities(state, i, j)]
         return len(temp)
 
+""" Implementation du probleme pour hill climbing et simulated annealing."""
 class SudokuHillClimbing(Problem):
     def __init__(self, initial, goal=None):
         state = grid(initial)
@@ -75,21 +77,26 @@ class SudokuHillClimbing(Problem):
     def value(self, state):
         return count_conflicts(state)
 
+""" Convertit l'etat en une matrice 2D. """
 def grid(state):
     return np.array(state).reshape((9, 9))
 
+""" Retourne True si l'insertion de elem engendre un conflit dans la ligne. """
 def line(state, line, elem):
     state = grid(state)
     return list(state[line]).count(elem) > 1 
 
+""" Retourne True si l'insertion de elem engendre un conflit dans la colonne. """
 def column(state, column, elem):
     state = grid(state)
     return list(state[:, column]).count(elem) > 1
 
+""" Retourne True si l'insertion de elem engendre un conflit dans le carre. """
 def square(state, line, column, elem):
     state = grid(state)
     return list(tuple(state[line//3*3:line//3*3+3, column//3*3:column//3*3+3].flatten())).count(elem) > 1
 
+""" Retourne le nombre de conflits dans l'etat. """
 def count_conflicts(state):
     counter = 0
     for x in range(9):
@@ -105,6 +112,7 @@ def count_conflicts(state):
                         counter += 1
     return counter
 
+""" Retourn les possibilites de la classe a la position ij en respectant le carre. """
 def possibilities(state, i, j):
     n = [x for x in range(1, 10)]
     temp = []
@@ -115,6 +123,7 @@ def possibilities(state, i, j):
             temp.append(elem)
     return temp
 
+""" Retourn les possibilites de la classe a la position ij en respectant la ligne, la colonne et le carre. """
 def possibilities_grid(state, i, j):
     temp = []
     state = grid(state)
@@ -126,6 +135,7 @@ def possibilities_grid(state, i, j):
             temp.append(elem)
     return temp
 
+""" Heuristique pour la case la plus contraignee. """
 def most_constrained(node):
     if node.parent is not None:
         i, j, elem = node.action
